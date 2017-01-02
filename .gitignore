@@ -1,3 +1,5 @@
+META-INF/*
+deps.cljs
 pom.xml
 pom.xml.asc
 *jar
