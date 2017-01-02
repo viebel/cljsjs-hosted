@@ -1,0 +1,163 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Ring Layout Demo</title>
+<script src="../../third-party/closure/closure/goog/base.js"></script>
+<script src="../deps.js"></script>
+<script src = "../ring/alpha-pinene.js"></script>
+<script src = "../ring/azulene.js"></script>
+<script src = "../ring/biphenyl.js"></script>
+<script src = "../ring/spiro_decane.js"></script>
+<script src = "../json/json_templates.js"></script>
+
+<link rel="stylesheet"
+    href="../../third-party/closure/closure/goog/demos/css/demo.css">
+    <link rel="stylesheet"
+    href="../../third-party/closure/closure/goog/css/menus.css" />
+<link rel="stylesheet"
+    href="../../third-party/closure/closure/goog/css/menubutton.css">
+
+<script>
+    goog.require('kemia.controller.ReactionEditor');
+    goog.require('goog.events.EventType');
+    goog.require('goog.dom');
+    goog.require('goog.debug.Console');
+    goog.require('kemia.layout.CoordinateGenerator');
+    goog.require('goog.ui.Select');
+    goog.require('kemia.io.smiles.SmilesParser');
+    goog.require('kemia.io.mdl');
+    goog.require('kemia.io.json');
+</script>
+
+
+<script><!--
+function draw(){
+    //uncomment next two lines to debug to console
+    //var c = new goog.debug.Console(); 
+    //c.setCapturing(true); 
+
+	renderer = new kemia.controller.ReactionEditor(goog.dom.getElement('benzene1'),{background : {color : 'white'}});
+	mol = kemia.io.json.readMolecule(templates[0]);
+	renderer.setModels([mol]);
+    renderer = new kemia.controller.ReactionEditor(goog.dom.getElement('benzene2'),{background : {color : 'white'}});
+    goog.array.forEach(mol.atoms, function(atom){
+    	atom.coord = new goog.math.Coordinate(0,0);
+    });
+    try{
+    	mol=kemia.layout.CoordinateGenerator.generate(mol);
+        mol.mustRecalcSSSR=true;
+    	renderer.setModels([mol]);
+    }catch (e) {
+    	console.log(e);
+    };
+    
+    var renderer = new kemia.controller.ReactionEditor(goog.dom.getElement('alpha_pinene1'),{background : {color : 'white'}});
+    var mol =  kemia.io.mdl.readMolfile(alpha_pinene);
+    renderer.setModels([mol]);
+    
+    renderer = new kemia.controller.ReactionEditor(goog.dom.getElement('alpha_pinene2'),{background : {color : 'white'}});
+    goog.array.forEach(mol.atoms, function(atom){
+    	atom.coord = new goog.math.Coordinate(0,0);
+    });
+    try{
+ 	   mol=kemia.layout.CoordinateGenerator.generate(mol);
+       mol.mustRecalcSSSR=true;
+ 	   renderer.setModels([mol]);
+ 	} catch (e){
+ 		console.log(e);
+ 	}   
+    
+    
+    renderer = new kemia.controller.ReactionEditor(goog.dom.getElement('azulene1'),{background : {color : 'white'}});
+    var mol =  kemia.io.mdl.readMolfile(azulene);
+    renderer.setModels([mol]);
+    
+    renderer = new kemia.controller.ReactionEditor(goog.dom.getElement('azulene2'),{background : {color : 'white'}});
+    goog.array.forEach(mol.atoms, function(atom){
+    	atom.coord = new goog.math.Coordinate(0,0);
+    });
+    try{
+    	mol=kemia.layout.CoordinateGenerator.generate(mol);
+        mol.mustRecalcSSSR=true;
+    	renderer.setModels([mol]);
+ 	} catch (e){
+ 		console.log(e);
+ 	}  
+ 
+    
+    renderer = new kemia.controller.ReactionEditor(goog.dom.getElement('biphenyl1'),{background : {color : 'white'}});
+    var mol =  kemia.io.mdl.readMolfile(biphenyl);
+    renderer.setModels([mol]);
+    
+    renderer = new kemia.controller.ReactionEditor(goog.dom.getElement('biphenyl2'),{background : {color : 'white'}});
+    goog.array.forEach(mol.atoms, function(atom){
+		//atom.symbol = atom.symbol + atom.index;
+    	atom.coord = new goog.math.Coordinate(0,0);
+    });
+    try{
+    	mol=kemia.layout.CoordinateGenerator.generate(mol);
+        mol.mustRecalcSSSR=true;
+    	renderer.setModels([mol]);
+ 	} catch (e){
+ 		console.log(e);
+ 	}  
+ 
+    
+    renderer = new kemia.controller.ReactionEditor(goog.dom.getElement('spiro_decane1'),{background : {color : 'white'}});
+    var mol =  kemia.io.mdl.readMolfile(spiro_decane);
+    renderer.setModels([mol]);
+    
+    renderer = new kemia.controller.ReactionEditor(goog.dom.getElement('spiro_decane2'),{background : {color : 'white'}});
+    goog.array.forEach(mol.atoms, function(atom){
+    	atom.coord = new goog.math.Coordinate(0,0);
+    });
+    try{
+    	mol=kemia.layout.CoordinateGenerator.generate(mol);
+        mol.mustRecalcSSSR=true;
+    	renderer.setModels([mol]);
+ 	} catch (e){
+ 		console.log(e);
+ 	}  
+
+    
+    
+    
+}
+    
+
+--></script>
+</head>
+
+<body onload="draw()">
+
+<fieldset style="width: 420px">
+<h1>Ring Coordinate Generation</h1>
+<table >
+<tr><th>expected</th><th>generated</th></tr>
+<tr>
+<td><div id="alpha_pinene1" style="width: 200px; height: 200px"></div></td><td><div id="alpha_pinene2" style="width: 200px; height: 200px"></div></td>
+</tr>
+<tr>
+<td><div id="benzene1" style="width: 200px; height: 200px;"></div></td><td><div id="benzene2" style="width: 200px; height: 200px;"></div></td>
+</tr>
+<tr>
+<td><div id="azulene1" style="width: 200px; height: 200px"></div></td><td><div id="azulene2" style="width: 200px; height: 200px"></div></td>
+</tr>
+<tr>
+<td><div id="biphenyl1" style="width: 200px; height: 200px;"></div></td><td><div id="biphenyl2" style="width: 200px; height: 200px;"></div></td>
+</tr>
+<tr>
+<td><div id="spiro_decane1" style="width: 200px; height: 200px"></div></td><td><div id="spiro_decane2" style="width: 200px; height: 200px"></div></td>
+</tr>
+</table>
+
+</fieldset>
+<br> 
+  <div id="perf"></div> 
+
+
+
+
+</body>
+</html>

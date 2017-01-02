@@ -1,0 +1,65 @@
+<html>
+<head>
+<script src="../../third-party/closure/closure/goog/base.js"></script>
+<script src="../deps.js"></script>
+<script>
+	goog.require('goog.events.EventType');
+	goog.require('kemia.model.NeighborList');
+	goog.require('kemia.model.Atom');
+	goog.require('kemia.model.Bond');
+	goog.require('kemia.model.Molecule');
+	goog.require('goog.debug.Trace');
+	goog.require('goog.dom');
+</script>
+<script>
+function runTiming(){
+    	var i = 1000;
+    	var mols = [];
+    	while(i>0){
+    		var center_x = Math.random()*10;
+    		var center_y = Math.random()*10;
+    		var mol = new kemia.model.Molecule();
+    		var a1 = new kemia.model.Atom("C", Math.random() + center_x, Math.random() + center_y);
+    		var a2 = new kemia.model.Atom("C", Math.random() + center_x, Math.random() + center_y);
+    		var a3 = new kemia.model.Atom("C", Math.random() + center_x, Math.random() + center_y);
+    		var b1 = new kemia.model.Bond(a1, a2);
+    		var b2 = new kemia.model.Bond(a2, a3);
+    		mol.addAtom(a1);
+    		mol.addAtom(a2);
+    		mol.addAtom(a3);
+    		mol.addBond(b1);
+    		mol.addBond(b2);
+    		mols.push(mol);
+    		i--;
+    	}	
+    	
+    	var defaultThreshold = 0; 
+		goog.debug.Trace.reset(defaultThreshold); 
+    	
+    	var tracer = goog.debug.Trace.startTracer('neighbor list containing ' + mols.length + ' molecules');
+    	var nl = new kemia.model.NeighborList(kemia.model.NeighborList.moleculesToNeighbors(mols), 2, .25);
+    	goog.debug.Trace.addComment('neighborlist created');
+    	i = 0;
+    	var repeat_count = 1000;
+    	while(i<repeat_count){
+    		var x = Math.random()*10;
+    		var y = Math.random()*10;
+    		nl.getNearestList({x:x, y:y});
+    		i++;
+    	}
+    	goog.debug.Trace.addComment('getNearestList called ' + repeat_count + ' times');
+    	// Stop the trace. 
+		goog.debug.Trace.stopTracer(tracer); 
+		// Generate a report of all traces and comments, and print the results in 
+		// a <pre> element to preserve the formatting of the report. 
+		var results = goog.debug.Trace.getFormattedTrace(); 
+		var el = goog.dom.getElement('traceResults'); 
+		el.innerHTML = goog.string.htmlEscape(results); 	
+    }
+goog.events.listen(window, goog.events.EventType.LOAD, runTiming);	
+</script>
+</head>
+<body>
+<pre id='traceResults'></pre>
+</body>
+</html>

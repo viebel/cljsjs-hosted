@@ -1,0 +1,100 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>kemia.service.identifier test</title>
+<script src="../../third-party/closure/closure/goog/base.js"></script>
+<script src="../deps.js"></script>
+<link rel="stylesheet" href="../../css/kemia.css" />
+<link rel="stylesheet"	href="../../css/demo.css" />
+<script>
+	goog.require('kemia.service.Identifier');
+	goog.require('goog.events.EventType');
+	goog.require('goog.dom');
+	goog.require('goog.ui.Select');
+	goog.require('goog.ui.MenuItem');
+	goog.require('kemia.io.json');
+	goog.require('kemia.controller.DefaultToolbar');
+	goog.require('kemia.controller.ToolbarController');
+	goog.require('kemia.controller.plugins.Move');
+	goog.require('kemia.controller.plugins.ClearEditor');
+	goog.require('kemia.controller.plugins.Zoom');
+	goog.require('kemia.controller.plugins.UndoRedo');
+	goog.require('kemia.controller.plugins.AtomEdit');
+	goog.require('kemia.controller.plugins.BondEdit');
+	goog.require('kemia.controller.plugins.ArrowPlusEdit');
+	goog.require('kemia.controller.plugins.Erase');
+	goog.require('kemia.controller.plugins.MoleculeEdit');
+	goog.require('kemia.controller.plugins.Smiles');
+    goog.require('kemia.io.mdl');
+    goog.require('kemia.io.smiles.SmilesParser');
+	goog.require('goog.debug.Console');
+	
+</script>
+</head>
+<body>
+<fieldset style="width: 600px">
+<legend><h1>Molecule Editor</h1></legend>
+<br>
+<label id="selectMolecule">Input any chemical identifier for renderering: </label>
+<input type="text" value="2-Amino-5-fluorophenol" id="name" />
+<input type="button" value="submit" onclick="run()" />
+<br>
+		<div id="moleculeEditorToolbar"></div>
+		<div id="moleculeEditorContainer" style="height: 400px">
+		</div>
+</fieldset>
+
+<script>
+var controller;
+var editor;
+var toolbar;
+var toolbarController
+function initPage(){
+	// uncomment next two lines to debug to console
+	var c = new goog.debug.Console(); 
+	c.setCapturing(true); 
+
+	toolbar = kemia.controller.DefaultToolbar.makeDefaultMoleculeToolbar(goog.dom.getElement('moleculeEditorToolbar'));  
+	
+	editor = new kemia.controller.ReactionEditor(goog.dom.getElement('moleculeEditorContainer'),{background : {color : 'white'}});
+
+	editor.registerPlugin(new kemia.controller.plugins.Move());
+	editor.registerPlugin(new kemia.controller.plugins.ClearEditor());
+	editor.registerPlugin(new kemia.controller.plugins.Zoom());
+	editor.registerPlugin(new kemia.controller.plugins.UndoRedo());
+	editor.registerPlugin(new kemia.controller.plugins.Erase());
+	editor.registerPlugin(new kemia.controller.plugins.AtomEdit());
+	editor.registerPlugin(new kemia.controller.plugins.BondEdit());
+	editor.registerPlugin(new kemia.controller.plugins.ArrowPlusEdit());
+	editor.registerPlugin(new kemia.controller.plugins.MoleculeEdit());
+	editor.registerPlugin(new kemia.controller.plugins.Cleanup());
+	
+    toolbarController = new kemia.controller.ToolbarController(editor, toolbar);
+	
+};
+
+
+goog.events.listen(window, goog.events.EventType.LOAD, initPage);
+
+function run(){
+		var name=goog.dom.getElement('name');
+		kemia.service.Identifier.query({'format':'sdf','name':''+name.value},function(response){
+			if(response.error=='notfound'){
+				editor.clear();
+				alert("Not Found");
+				return;
+			}else{
+				var mol=kemia.io.mdl.readMolfile(response.content);
+				editor.clear();
+				editor.setModels([mol]);
+			}
+		},function(payload){
+			alert("Request Timeout");
+		});
+	}
+	
+</script>
+
+</body>
+</html>

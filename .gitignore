@@ -1,4 +1,5 @@
 META-INF/*
+local-m2/*
 deps.cljs
 pom.xml
 pom.xml.asc

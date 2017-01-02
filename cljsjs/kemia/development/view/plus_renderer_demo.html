@@ -1,0 +1,44 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>kemia.view.ReactionRenderer</title>
+<!-- 
+ <script src="../../kemia_compiled.js"></script>
+ -->
+<script src="../../third-party/closure/closure/goog/base.js"></script>
+<script src="../deps.js"></script>
+
+<script>
+
+	goog.require('kemia.view.PlusRenderer');
+	goog.require('kemia.model.Plus');
+	goog.require('goog.events.EventType');
+	goog.require('goog.dom');
+	goog.require('goog.graphics');
+	goog.require('kemia.graphics.AffineTransform');
+</script>
+<script><!--
+    
+function initPage(){
+	var element = goog.dom.getElement('container')
+	var graphics = goog.graphics.createGraphics(element.clientWidth,
+			element.clientHeight);
+	graphics.render(element);
+	var pr = new kemia.view.PlusRenderer(graphics);
+	var trans = new kemia.graphics.AffineTransform(30,0,0,30,0,0);
+	pr.render(new kemia.model.Plus(new goog.math.Coordinate(2,2)), trans);
+	var plus = new kemia.model.Plus(new goog.math.Coordinate(2, 5));
+	pr.render(plus, trans);
+	pr.highlightOn(plus);
+};
+
+goog.events.listen(window, goog.events.EventType.LOAD, initPage);
+--></script>
+</head>
+
+<body>
+<div id="container" style="width: 400px; height: 400px"></div>
+
+</body>
+</html>

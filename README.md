@@ -18,12 +18,11 @@ where `package-name` is the package name with hyphens `-` instead of dots `.`
 In order to add/update a package, you have to:
 
 1. fork this project
-2. add the package in the `project.clj`
-3. run `lein deps`
-4. stay in the root folder
-5. open the jar of the package e.g. `tar xvf ~/.m2/repository/cljsjs/moment/2.15.2-3/moment-2.15.2-3.jar`: it will add the contents of the package under the `cljsjs` folder.
-6. add an empty file with the name of the version e.g `cljsjs/moment/version-2.15.2-3`
-7. add your folder to git e.g. `git add cljsjs/moment`
-8. commit and push - include the name and version of the package in the commit e.g. `git commit -m 'moment 2.15.2-3'
-9. open a pull request
+2. `lein run -m clojure.main scripts/package-list.clj`: it writes the list of packages from http://cljsjs.github.io/data.json into a file: `packages.edn`
+3. add the packages from `packages.edn` in the `project.clj`
+4. run `lein deps`
+5. run `./scripts/extract-packages`: it adds the contents of the packages under the `cljsjs` folder.
+6. add your folder to git e.g. `git add cljsjs`
+7. commit and push - including `project.clj` and `packages.edn`
+8. open a pull request
 

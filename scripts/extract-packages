@@ -1,0 +1,1 @@
+for x in `find local-m2/cljsjs -name '*.jar'`; do tar xvf ${x}; done

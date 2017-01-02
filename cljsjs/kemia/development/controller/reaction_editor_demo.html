@@ -1,0 +1,66 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>kemia.controller.ReactionEditor</title>
+
+<script src="http://localhost:9810/compile?id=api"></script>
+<script src="testdata.js"></script>
+
+<link rel="stylesheet" href="../../css/kemia.css" />
+<link rel="stylesheet"	href="../../css/demo.css" />
+
+<script>
+function initPage() {
+	var toolbar = kemia.controller.DefaultToolbar
+			.makeDefaultReactionToolbar(goog.dom
+					.getElement('reactionEditorToolbar'));
+
+	var model = kemia.io.json.readReaction(reactionDrawing);
+
+	var editor = new kemia.controller.ReactionEditor(goog.dom
+			.getElement('reactionEditorContainer'), {
+		background : {
+			color : 'white'
+		},
+		showTerminalCarbons : false
+	});
+
+	editor.registerPlugin(new kemia.controller.plugins.Move());
+	editor.registerPlugin(new kemia.controller.plugins.ClearEditor());
+	editor.registerPlugin(new kemia.controller.plugins.Zoom());
+	editor.registerPlugin(new kemia.controller.plugins.UndoRedo());
+	editor.registerPlugin(new kemia.controller.plugins.Erase());
+	editor.registerPlugin(new kemia.controller.plugins.AtomEdit());
+	editor.registerPlugin(new kemia.controller.plugins.BondEdit());
+	editor.registerPlugin(new kemia.controller.plugins.ArrowPlusEdit());
+	editor.registerPlugin(new kemia.controller.plugins.MoleculeEdit());
+	// editor.registerPlugin(new kemia.controller.plugins.Cleanup());
+
+	var toolbarController = new kemia.controller.ToolbarController(editor,
+			toolbar);
+	// editor.disablePlugins();
+	// toolbar.setVisible(false);
+
+	editor.setModels([ model ]);
+}
+</script>
+</head>
+<body onload="initPage()">
+<fieldset>
+<legend><h1>Reaction Editor</h1></legend>
+<table style="width: 100%">
+	<tr>
+		<td>
+		<div id="reactionEditorToolbar"></div>
+		<div
+			style="width: 1000px; height: 400px; overflow: auto; padding: 5px">
+		<div id="reactionEditorContainer" style="width: 1000px; height: 400px">
+		</td>
+	</tr>
+
+</table>
+
+</fieldset>
+</body>
+</html>
