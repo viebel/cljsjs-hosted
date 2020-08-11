@@ -23,25 +23,32 @@ lein run -m clojure.main ./scripts/package-list.clj
 
 2. Copy the contents of `packages.edn` into `project.clj`
 
-3. Download stuff
+3. Clean local repo
+
+```bash
+rm -rf local-m2
+```
+
+4.  Download stuff
 
 ```bash
 lein deps
 ```
-4. extract the contents of the packages into the `cljsjs` folder
+
+5. Extract the contents of the packages into the `cljsjs` folder
 
 ```bash
 ./scripts/extract-packages
 
 ```
 
-5.  Commit and Push
+6. Commit and Push
 ```bash
 git add .
 git commit -m 'Upgrade packages'
 git push
 ```
 
-6.Open a PR
+7. Open a PR
 
 
