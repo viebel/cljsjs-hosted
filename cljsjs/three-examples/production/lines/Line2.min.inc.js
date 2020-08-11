@@ -1,0 +1,1 @@
+THREE.Line2=function(a,b){THREE.LineSegments2.call(this);this.type="Line2";this.geometry=void 0!==a?a:new THREE.LineGeometry;this.material=void 0!==b?b:new THREE.LineMaterial({color:16777215*Math.random()})};THREE.Line2.prototype=Object.assign(Object.create(THREE.LineSegments2.prototype),{constructor:THREE.Line2,isLine2:!0,copy:function(a){return this}});

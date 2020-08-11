@@ -1,0 +1,2 @@
+THREE.LuminanceNode=function(a){THREE.TempNode.call(this,"fv1");this.rgb=a};THREE.LuminanceNode.prototype=Object.create(THREE.TempNode.prototype);THREE.LuminanceNode.prototype.constructor=THREE.LuminanceNode;THREE.LuminanceNode.prototype.nodeType="Luminance";THREE.LuminanceNode.prototype.generate=function(a,b){a.include("luminance_rgb");return a.format("luminance_rgb("+this.rgb.build(a,"v3")+")",this.getType(a),b)};
+THREE.LuminanceNode.prototype.toJSON=function(a){var b=this.getJSONNode(a);b||(b=this.createJSONNode(a),b.rgb=this.rgb.toJSON(a).uuid);return b};

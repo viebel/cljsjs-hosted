@@ -1,0 +1,3 @@
+THREE.KMZLoader=function(b){this.manager=void 0!==b?b:THREE.DefaultLoadingManager};
+THREE.KMZLoader.prototype={constructor:THREE.KMZLoader,load:function(b,c,e,f){var d=this,a=new THREE.FileLoader(d.manager);a.setResponseType("arraybuffer");a.load(b,function(a){c(d.parse(a))},e,f)},parse:function(b){b=new JSZip(b);var c=b.file(/dae$/i);if(c.length){var c=c[0],c=(new THREE.ColladaLoader).parse(c.asText()),e=c.library.images,f;for(f in e){var d=e[f],a=decodeURI(d.init_from),a=a.replace("../",""),a=b.file(new RegExp(a+"$"));a.length&&(a=new Blob([a[0].asArrayBuffer()],{type:"application/octet-binary"}),
+d.build.src=URL.createObjectURL(a))}return c}console.error("KMZLoader: Couldn't find .dae file.");return{scene:new THREE.Group}}};

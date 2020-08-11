@@ -1,0 +1,2 @@
+THREE.RawNode=function(a){THREE.GLNode.call(this,"v4");this.value=a};THREE.RawNode.prototype=Object.create(THREE.GLNode.prototype);THREE.RawNode.prototype.constructor=THREE.RawNode;THREE.RawNode.prototype.nodeType="Raw";THREE.RawNode.prototype.generate=function(a){var b=this.value.parseAndBuildCode(a,this.type),c=b.code+"\n";return c="vertex"==a.shader?c+("gl_Position \x3d "+b.result+";"):c+("gl_FragColor \x3d "+b.result+";")};
+THREE.RawNode.prototype.toJSON=function(a){var b=this.getJSONNode(a);b||(b=this.createJSONNode(a),b.value=this.value.toJSON(a).uuid);return b};

@@ -1,0 +1,2 @@
+THREE.VarNode=function(a){THREE.GLNode.call(this,a)};THREE.VarNode.prototype=Object.create(THREE.GLNode.prototype);THREE.VarNode.prototype.constructor=THREE.VarNode;THREE.VarNode.prototype.nodeType="Var";THREE.VarNode.prototype.getType=function(a){return a.getTypeByFormat(this.type)};THREE.VarNode.prototype.generate=function(a,b){var c=a.material.getVar(this.uuid,this.type);return a.format(c.name,this.getType(a),b)};
+THREE.VarNode.prototype.toJSON=function(a){var b=this.getJSONNode(a);b||(b=this.createJSONNode(a),b.out=this.type);return b};

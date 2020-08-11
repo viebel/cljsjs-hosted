@@ -1,0 +1,1 @@
+THREE.WireframeGeometry2=function(a){THREE.LineSegmentsGeometry.call(this);this.type="WireframeGeometry2";this.fromWireframeGeometry(new THREE.WireframeGeometry(a))};THREE.WireframeGeometry2.prototype=Object.assign(Object.create(THREE.LineSegmentsGeometry.prototype),{constructor:THREE.WireframeGeometry2,isWireframeGeometry2:!0,copy:function(a){return this}});

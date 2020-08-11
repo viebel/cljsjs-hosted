@@ -1,0 +1,1 @@
+THREE.NodeFrame=function(a){this.time=void 0!==a?a:0;this.frameId=0};THREE.NodeFrame.prototype.update=function(a){++this.frameId;this.time+=a;this.delta=a;return this};THREE.NodeFrame.prototype.updateNode=function(a){if(a.frameId===this.frameId)return this;a.updateFrame(this);a.frameId=this.frameId;return this};

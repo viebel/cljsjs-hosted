@@ -1,0 +1,1 @@
+THREE.BasicShader={uniforms:{},vertexShader:"void main() {\ngl_Position \x3d projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n}",fragmentShader:"void main() {\ngl_FragColor \x3d vec4( 1.0, 0.0, 0.0, 0.5 );\n}"};

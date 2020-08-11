@@ -1,0 +1,1 @@
+THREE.ExplodeModifier=function(){};THREE.ExplodeModifier.prototype.modify=function(a){for(var c=[],d=0,f=a.faces.length;d<f;d++){var e=c.length,b=a.faces[d],g=a.vertices[b.b],h=a.vertices[b.c];c.push(a.vertices[b.a].clone());c.push(g.clone());c.push(h.clone());b.a=e;b.b=e+1;b.c=e+2}a.vertices=c};

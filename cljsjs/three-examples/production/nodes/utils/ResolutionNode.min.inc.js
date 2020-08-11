@@ -1,0 +1,2 @@
+THREE.ResolutionNode=function(a){THREE.Vector2Node.call(this);this.renderer=a};THREE.ResolutionNode.prototype=Object.create(THREE.Vector2Node.prototype);THREE.ResolutionNode.prototype.constructor=THREE.ResolutionNode;THREE.ResolutionNode.prototype.nodeType="Resolution";THREE.ResolutionNode.prototype.updateFrame=function(a){a=this.renderer.getSize();var b=this.renderer.getPixelRatio();this.x=a.width*b;this.y=a.height*b};
+THREE.ResolutionNode.prototype.toJSON=function(a){var b=this.getJSONNode(a);b||(b=this.createJSONNode(a),b.renderer=this.renderer.uuid);return b};

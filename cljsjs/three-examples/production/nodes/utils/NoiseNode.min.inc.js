@@ -1,0 +1,2 @@
+THREE.NoiseNode=function(a){THREE.TempNode.call(this,"fv1");this.coord=a};THREE.NoiseNode.prototype=Object.create(THREE.TempNode.prototype);THREE.NoiseNode.prototype.constructor=THREE.NoiseNode;THREE.NoiseNode.prototype.nodeType="Noise";THREE.NoiseNode.prototype.generate=function(a,b){a.include("snoise");return a.format("snoise("+this.coord.build(a,"v2")+")",this.getType(a),b)};
+THREE.NoiseNode.prototype.toJSON=function(a){var b=this.getJSONNode(a);b||(b=this.createJSONNode(a),b.coord=this.coord.toJSON(a).uuid);return b};

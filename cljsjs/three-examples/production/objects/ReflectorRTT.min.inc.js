@@ -1,0 +1,1 @@
+THREE.ReflectorRTT=function(a,b){THREE.Reflector.call(this,a,b);this.geometry.setDrawRange(0,0);this.renderOrder=-Infinity};THREE.ReflectorRTT.prototype=Object.create(THREE.Reflector.prototype);

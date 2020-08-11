@@ -1,0 +1,1 @@
+var PRNG=function(){this.seed=1;this.next=function(){return this.gen()/2147483647};this.nextRange=function(a,b){return a+(b-a)*this.next()};this.gen=function(){return this.seed=16807*this.seed%2147483647}};

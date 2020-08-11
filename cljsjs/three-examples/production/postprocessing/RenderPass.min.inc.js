@@ -1,0 +1,3 @@
+THREE.RenderPass=function(a,b,c,e,d){THREE.Pass.call(this);this.scene=a;this.camera=b;this.overrideMaterial=c;this.clearColor=e;this.clearAlpha=void 0!==d?d:0;this.clear=!0;this.needsSwap=this.clearDepth=!1};
+THREE.RenderPass.prototype=Object.assign(Object.create(THREE.Pass.prototype),{constructor:THREE.RenderPass,render:function(a,b,c,e,d){b=a.autoClear;a.autoClear=!1;this.scene.overrideMaterial=this.overrideMaterial;var f,g;this.clearColor&&(f=a.getClearColor().getHex(),g=a.getClearAlpha(),a.setClearColor(this.clearColor,this.clearAlpha));this.clearDepth&&a.clearDepth();a.render(this.scene,this.camera,this.renderToScreen?null:c,this.clear);this.clearColor&&a.setClearColor(f,g);this.scene.overrideMaterial=
+null;a.autoClear=b}});

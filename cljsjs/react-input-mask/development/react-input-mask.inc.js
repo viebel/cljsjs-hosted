@@ -1,833 +1,1216 @@
-// https://github.com/sanniassin/react-input-mask
+(function (global, factory) {
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('react'), require('react-dom')) :
+  typeof define === 'function' && define.amd ? define(['react', 'react-dom'], factory) :
+  (global.ReactInputMask = factory(global.React,global.ReactDOM));
+}(this, (function (React,reactDom) { 'use strict';
 
-"use strict";
+  React = React && React.hasOwnProperty('default') ? React['default'] : React;
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+  function _defaults2(obj, defaults) { var keys = Object.getOwnPropertyNames(defaults); for (var i = 0; i < keys.length; i++) { var key = keys[i]; var value = Object.getOwnPropertyDescriptor(defaults, key); if (value && value.configurable && obj[key] === undefined) { Object.defineProperty(obj, key, value); } } return obj; }
 
-function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+  function _extends() {
+    _extends = Object.assign || function (target) {
+      for (var i = 1; i < arguments.length; i++) {
+        var source = arguments[i];
 
-
-
-var InputElement = React.createClass({
-    displayName: "InputElement",
-
-    defaultCharsRules: {
-        "9": "[0-9]",
-        "a": "[A-Za-z]",
-        "*": "[A-Za-z0-9]"
-    },
-    defaultMaskChar: "_",
-    lastCaretPos: null,
-    isAndroidBrowser: function () {
-        var windows = new RegExp("windows", "i");
-        var firefox = new RegExp("firefox", "i");
-        var android = new RegExp("android", "i");
-        var ua = navigator.userAgent;
-        return !windows.test(ua) && !firefox.test(ua) && android.test(ua);
-    },
-    isWindowsPhoneBrowser: function () {
-        var windows = new RegExp("windows", "i");
-        var phone = new RegExp("phone", "i");
-        var ua = navigator.userAgent;
-        return windows.test(ua) && phone.test(ua);
-    },
-    isAndroidFirefox: function () {
-        var windows = new RegExp("windows", "i");
-        var firefox = new RegExp("firefox", "i");
-        var android = new RegExp("android", "i");
-        var ua = navigator.userAgent;
-        return !windows.test(ua) && firefox.test(ua) && android.test(ua);
-    },
-    isDOMElement: function (element) {
-        return typeof HTMLElement === "object" ? element instanceof HTMLElement // DOM2
-        : element.nodeType === 1 && typeof element.nodeName === "string";
-    },
-    // getDOMNode is deprecated but we need it to stay compatible with React 0.12
-    getInputDOMNode: function () {
-        var input = this.refs.input;
-
-        if (!input) {
-            return null;
+        for (var key in source) {
+          if (Object.prototype.hasOwnProperty.call(source, key)) {
+            target[key] = source[key];
+          }
         }
+      }
 
-        // React 0.14
-        if (this.isDOMElement(input)) {
-            return input;
-        }
+      return target;
+    };
 
-        return input.getDOMNode();
-    },
-    enableValueAccessors: function () {
-        var _this = this;
+    return _extends.apply(this, arguments);
+  }
 
-        if (this.canUseAccessors) {
-            var input = this.getInputDOMNode();
-            this.valueDescriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(input), 'value');
-            Object.defineProperty(input, 'value', {
-                configurable: true,
-                enumerable: true,
-                get: function () {
-                    return _this.value;
-                },
-                set: function (val) {
-                    _this.value = val;
-                    _this.valueDescriptor.set.call(input, val);
-                }
-            });
-        }
-    },
-    disableValueAccessors: function () {
-        var valueDescriptor = this.valueDescriptor;
+  function _inheritsLoose(subClass, superClass) {
+    _defaults2(subClass.prototype, superClass && superClass.prototype);
 
-        if (!valueDescriptor) {
-            return;
-        }
-        this.valueDescriptor = null;
-        var input = this.getInputDOMNode();
-        Object.defineProperty(input, 'value', valueDescriptor);
-    },
-    getInputValue: function () {
-        var input = this.getInputDOMNode();
-        var valueDescriptor = this.valueDescriptor;
+    _defaults2(subClass, superClass);
+  }
 
-        var value;
-        if (valueDescriptor) {
-            value = valueDescriptor.get.call(input);
-        } else {
-            value = input.value;
-        }
+  function _objectWithoutProperties(source, excluded) {
+    if (source == null) return {};
+    var target = {};
+    var sourceKeys = Object.keys(source);
+    var key, i;
 
-        return value;
-    },
-    setInputValue: function (val) {
-        var input = this.getInputDOMNode();
-        this.value = val;
-        input.value = val;
-    },
-    getPrefix: function () {
-        var prefix = "";
-        var mask = this.mask;
-
-        for (var i = 0; i < mask.length && this.isPermanentChar(i); ++i) {
-            prefix += mask[i];
-        }
-        return prefix;
-    },
-    getFilledLength: function () {
-        var value = arguments.length <= 0 || arguments[0] === undefined ? this.state.value : arguments[0];
-
-        var i;
-        var maskChar = this.maskChar;
-
-        if (!maskChar) {
-            return value.length;
-        }
-
-        for (i = value.length - 1; i >= 0; --i) {
-            var character = value[i];
-            if (!this.isPermanentChar(i) && this.isAllowedChar(character, i)) {
-                break;
-            }
-        }
-
-        return ++i || this.getPrefix().length;
-    },
-    getLeftEditablePos: function (pos) {
-        for (var i = pos; i >= 0; --i) {
-            if (!this.isPermanentChar(i)) {
-                return i;
-            }
-        }
-        return null;
-    },
-    getRightEditablePos: function (pos) {
-        var mask = this.mask;
-
-        for (var i = pos; i < mask.length; ++i) {
-            if (!this.isPermanentChar(i)) {
-                return i;
-            }
-        }
-        return null;
-    },
-    isEmpty: function () {
-        var _this2 = this;
-
-        var value = arguments.length <= 0 || arguments[0] === undefined ? this.state.value : arguments[0];
-
-        return !value.split("").some(function (character, i) {
-            return !_this2.isPermanentChar(i) && _this2.isAllowedChar(character, i);
-        });
-    },
-    isFilled: function () {
-        var value = arguments.length <= 0 || arguments[0] === undefined ? this.state.value : arguments[0];
-
-        return this.getFilledLength(value) === this.mask.length;
-    },
-    createFilledArray: function (length, val) {
-        var array = [];
-        for (var i = 0; i < length; i++) {
-            array[i] = val;
-        }
-        return array;
-    },
-    formatValue: function (value) {
-        var _this3 = this;
-
-        var maskChar = this.maskChar;
-        var mask = this.mask;
-
-        if (!maskChar) {
-            var prefix = this.getPrefix();
-            var prefixLen = prefix.length;
-            value = this.insertRawSubstr("", value, 0);
-            while (value.length > prefixLen && this.isPermanentChar(value.length - 1)) {
-                value = value.slice(0, value.length - 1);
-            }
-
-            if (value.length < prefixLen) {
-                value = prefix;
-            }
-
-            return value;
-        }
-        if (value) {
-            var emptyValue = this.formatValue("");
-            return this.insertRawSubstr(emptyValue, value, 0);
-        }
-        return value.split("").concat(this.createFilledArray(mask.length - value.length, null)).map(function (character, pos) {
-            if (_this3.isAllowedChar(character, pos)) {
-                return character;
-            } else if (_this3.isPermanentChar(pos)) {
-                return mask[pos];
-            }
-            return maskChar;
-        }).join("");
-    },
-    clearRange: function (value, start, len) {
-        var _this4 = this;
-
-        var end = start + len;
-        var maskChar = this.maskChar;
-        var mask = this.mask;
-
-        if (!maskChar) {
-            var prefixLen = this.getPrefix().length;
-            value = value.split("").filter(function (character, i) {
-                return i < prefixLen || i < start || i >= end;
-            }).join("");
-            return this.formatValue(value);
-        }
-        return value.split("").map(function (character, i) {
-            if (i < start || i >= end) {
-                return character;
-            }
-            if (_this4.isPermanentChar(i)) {
-                return mask[i];
-            }
-            return maskChar;
-        }).join("");
-    },
-    replaceSubstr: function (value, newSubstr, pos) {
-        return value.slice(0, pos) + newSubstr + value.slice(pos + newSubstr.length);
-    },
-    insertRawSubstr: function (value, substr, pos) {
-        var mask = this.mask;
-        var maskChar = this.maskChar;
-
-        var isFilled = this.isFilled(value);
-        var prefixLen = this.getPrefix().length;
-        substr = substr.split("");
-
-        if (!maskChar && pos > value.length) {
-            value += mask.slice(value.length, pos);
-        }
-
-        for (var i = pos; i < mask.length && substr.length;) {
-            var isPermanent = this.isPermanentChar(i);
-            if (!isPermanent || mask[i] === substr[0]) {
-                var character = substr.shift();
-                if (this.isAllowedChar(character, i, true)) {
-                    if (i < value.length) {
-                        if (maskChar || isFilled || i < prefixLen) {
-                            value = this.replaceSubstr(value, character, i);
-                        } else {
-                            value = this.formatValue(value.substr(0, i) + character + value.substr(i));
-                        }
-                    } else if (!maskChar) {
-                        value += character;
-                    }
-                    ++i;
-                }
-            } else {
-                if (!maskChar && i >= value.length) {
-                    value += mask[i];
-                } else if (maskChar && isPermanent && substr[0] === maskChar) {
-                    substr.shift();
-                }
-                ++i;
-            }
-        }
-        return value;
-    },
-    getRawSubstrLength: function (value, substr, pos) {
-        var mask = this.mask;
-        var maskChar = this.maskChar;
-
-        substr = substr.split("");
-        for (var i = pos; i < mask.length && substr.length;) {
-            if (!this.isPermanentChar(i) || mask[i] === substr[0]) {
-                var character = substr.shift();
-                if (this.isAllowedChar(character, i, true)) {
-                    ++i;
-                }
-            } else {
-                ++i;
-            }
-        }
-        return i - pos;
-    },
-    isAllowedChar: function (character, pos) {
-        var allowMaskChar = arguments.length <= 2 || arguments[2] === undefined ? false : arguments[2];
-        var mask = this.mask;
-        var maskChar = this.maskChar;
-
-        if (this.isPermanentChar(pos)) {
-            return mask[pos] === character;
-        }
-        var ruleChar = mask[pos];
-        var charRule = this.charsRules[ruleChar];
-        return new RegExp(charRule).test(character || "") || allowMaskChar && character === maskChar;
-    },
-    isPermanentChar: function (pos) {
-        return this.permanents.indexOf(pos) !== -1;
-    },
-    setCaretToEnd: function () {
-        var filledLen = this.getFilledLength();
-        var pos = this.getRightEditablePos(filledLen);
-        if (pos !== null) {
-            this.setCaretPos(pos);
-        }
-    },
-    setSelection: function (start) {
-        var len = arguments.length <= 1 || arguments[1] === undefined ? 0 : arguments[1];
-
-        var input = this.getInputDOMNode();
-        if (!input) {
-            return;
-        }
-
-        var end = start + len;
-        if ("selectionStart" in input && "selectionEnd" in input) {
-            input.selectionStart = start;
-            input.selectionEnd = end;
-        } else {
-            var range = input.createTextRange();
-            range.collapse(true);
-            range.moveStart("character", start);
-            range.moveEnd("character", end - start);
-            range.select();
-        }
-    },
-    getSelection: function () {
-        var input = this.getInputDOMNode();
-        var start = 0;
-        var end = 0;
-
-        if ("selectionStart" in input && "selectionEnd" in input) {
-            start = input.selectionStart;
-            end = input.selectionEnd;
-        } else {
-            var range = document.selection.createRange();
-            if (range.parentElement() === input) {
-                start = -range.moveStart("character", -input.value.length);
-                end = -range.moveEnd("character", -input.value.length);
-            }
-        }
-
-        return {
-            start: start,
-            end: end,
-            length: end - start
-        };
-    },
-    getCaretPos: function () {
-        return this.getSelection().start;
-    },
-    setCaretPos: function (pos) {
-        var raf = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function (fn) {
-            return setTimeout(fn, 0);
-        };
-
-        var setPos = this.setSelection.bind(this, pos, 0);
-
-        setPos();
-        raf(setPos);
-
-        this.lastCaretPos = pos;
-    },
-    isFocused: function () {
-        return document.activeElement === this.getInputDOMNode();
-    },
-    parseMask: function (mask) {
-        var _this5 = this;
-
-        if (!mask || typeof mask !== "string") {
-            return {
-                mask: null,
-                lastEditablePos: null,
-                permanents: []
-            };
-        }
-        var str = "";
-        var permanents = [];
-        var isPermanent = false;
-        var lastEditablePos = null;
-
-        mask.split("").forEach(function (character) {
-            if (!isPermanent && character === "\\") {
-                isPermanent = true;
-            } else {
-                if (isPermanent || !_this5.charsRules[character]) {
-                    permanents.push(str.length);
-                } else {
-                    lastEditablePos = str.length + 1;
-                }
-                str += character;
-                isPermanent = false;
-            }
-        });
-
-        return {
-            mask: str,
-            lastEditablePos: lastEditablePos,
-            permanents: permanents
-        };
-    },
-    getStringValue: function (value) {
-        return !value && value !== 0 ? "" : value + "";
-    },
-    getInitialState: function () {
-        this.hasValue = this.props.value != null;
-        this.charsRules = "formatChars" in this.props ? this.props.formatChars : this.defaultCharsRules;
-
-        var mask = this.parseMask(this.props.mask);
-        var defaultValue = this.props.defaultValue != null ? this.props.defaultValue : '';
-        var value = this.props.value != null ? this.props.value : defaultValue;
-
-        value = this.getStringValue(value);
-
-        this.mask = mask.mask;
-        this.permanents = mask.permanents;
-        this.lastEditablePos = mask.lastEditablePos;
-        this.maskChar = "maskChar" in this.props ? this.props.maskChar : this.defaultMaskChar;
-
-        if (this.mask && (this.props.alwaysShowMask || value)) {
-            value = this.formatValue(value);
-        }
-
-        return { value: value };
-    },
-    componentWillMount: function () {
-        var mask = this.mask;
-        var value = this.state.value;
-
-        if (mask && value) {
-            this.setState({ value: value });
-        }
-    },
-    componentWillReceiveProps: function (nextProps) {
-        this.hasValue = this.props.value != null;
-        this.charsRules = "formatChars" in nextProps ? nextProps.formatChars : this.defaultCharsRules;
-
-        var oldMask = this.mask;
-        var mask = this.parseMask(nextProps.mask);
-        var isMaskChanged = mask.mask && mask.mask !== this.mask;
-
-        this.mask = mask.mask;
-        this.permanents = mask.permanents;
-        this.lastEditablePos = mask.lastEditablePos;
-        this.maskChar = "maskChar" in nextProps ? nextProps.maskChar : this.defaultMaskChar;
-
-        if (!this.mask) {
-            return;
-        }
-
-        var newValue = nextProps.value != null ? this.getStringValue(nextProps.value) : this.state.value;
-
-        if (!oldMask && nextProps.value == null) {
-            newValue = this.getInputDOMNode().value;
-        }
-
-        var showEmpty = nextProps.alwaysShowMask || this.isFocused();
-        if (isMaskChanged || mask.mask && (newValue || showEmpty && !this.hasValue)) {
-            newValue = this.formatValue(newValue);
-
-            if (isMaskChanged) {
-                var pos = this.lastCaretPos;
-                var filledLen = this.getFilledLength(newValue);
-                if (filledLen < pos) {
-                    this.setCaretPos(this.getRightEditablePos(filledLen));
-                }
-            }
-        }
-        if (mask.mask && this.isEmpty(newValue) && !showEmpty && !this.hasValue) {
-            newValue = "";
-        }
-        this.value = newValue;
-        if (this.state.value !== newValue) {
-            this.setState({ value: newValue });
-        }
-    },
-    componentDidUpdate: function (prevProps, prevState) {
-        if ((this.mask || prevProps.mask) && this.props.value == null) {
-            this.updateUncontrolledInput();
-        }
-        if (this.valueDescriptor && this.getInputValue() !== this.state.value) {
-            this.setInputValue(this.state.value);
-        }
-    },
-    updateUncontrolledInput: function () {
-        if (this.getInputValue() !== this.state.value) {
-            this.setInputValue(this.state.value);
-        }
-    },
-    onKeyDown: function (event) {
-        var hasHandler = typeof this.props.onKeyDown === "function";
-        if (event.ctrlKey || event.metaKey) {
-            if (hasHandler) {
-                this.props.onKeyDown(event);
-            }
-            return;
-        }
-
-        var caretPos = this.getCaretPos();
-        var value = this.state.value;
-        var key = event.key;
-        var preventDefault = false;
-        switch (key) {
-            case "Backspace":
-            case "Delete":
-                var prefixLen = this.getPrefix().length;
-                var deleteFromRight = key === "Delete";
-                var selectionRange = this.getSelection();
-                if (selectionRange.length) {
-                    value = this.clearRange(value, selectionRange.start, selectionRange.length);
-                } else if (caretPos < prefixLen || !deleteFromRight && caretPos === prefixLen) {
-                    caretPos = prefixLen;
-                } else {
-                    var editablePos = deleteFromRight ? this.getRightEditablePos(caretPos) : this.getLeftEditablePos(caretPos - 1);
-                    if (editablePos !== null) {
-                        value = this.clearRange(value, editablePos, 1);
-                        caretPos = editablePos;
-                    }
-                }
-                preventDefault = true;
-                break;
-            default:
-                break;
-        }
-
-        if (hasHandler) {
-            this.props.onKeyDown(event);
-        }
-
-        if (value !== this.state.value) {
-            this.setInputValue(value);
-            this.setState({
-                value: this.hasValue ? this.state.value : value
-            });
-            preventDefault = true;
-            if (typeof this.props.onChange === "function") {
-                this.props.onChange(event);
-            }
-        }
-        if (preventDefault) {
-            event.preventDefault();
-            this.setCaretPos(caretPos);
-        }
-    },
-    onKeyPress: function (event) {
-        var key = event.key;
-        var hasHandler = typeof this.props.onKeyPress === "function";
-        if (key === "Enter" || event.ctrlKey || event.metaKey) {
-            if (hasHandler) {
-                this.props.onKeyPress(event);
-            }
-            return;
-        }
-
-        if (this.isWindowsPhoneBrowser) {
-            return;
-        }
-
-        var caretPos = this.getCaretPos();
-        var selection = this.getSelection();
-        var value = this.state.value;
-        var mask = this.mask;
-        var maskChar = this.maskChar;
-        var lastEditablePos = this.lastEditablePos;
-
-        var maskLen = mask.length;
-        var prefixLen = this.getPrefix().length;
-
-        if (this.isPermanentChar(caretPos) && mask[caretPos] === key) {
-            value = this.insertRawSubstr(value, key, caretPos);
-            ++caretPos;
-        } else {
-            var editablePos = this.getRightEditablePos(caretPos);
-            if (editablePos !== null && this.isAllowedChar(key, editablePos)) {
-                value = this.clearRange(value, selection.start, selection.length);
-                value = this.insertRawSubstr(value, key, editablePos);
-                caretPos = editablePos + 1;
-            }
-        }
-
-        if (value !== this.state.value) {
-            this.setInputValue(value);
-            this.setState({
-                value: this.hasValue ? this.state.value : value
-            });
-            if (typeof this.props.onChange === "function") {
-                this.props.onChange(event);
-            }
-        }
-        event.preventDefault();
-        if (caretPos < lastEditablePos && caretPos > prefixLen) {
-            caretPos = this.getRightEditablePos(caretPos);
-        }
-        this.setCaretPos(caretPos);
-    },
-    onChange: function (event) {
-        var _this6 = this;
-
-        var pasteSelection = this.pasteSelection;
-        var mask = this.mask;
-        var maskChar = this.maskChar;
-        var lastEditablePos = this.lastEditablePos;
-        var preventEmptyChange = this.preventEmptyChange;
-
-        var target = event.target;
-        var value = this.getInputValue();
-        if (!value && this.preventEmptyChange) {
-            this.disableValueAccessors();
-            this.preventEmptyChange = false;
-            this.setInputValue(this.state.value);
-            return;
-        }
-        var oldValue = this.state.value;
-        if (pasteSelection) {
-            this.pasteSelection = null;
-            this.pasteText(oldValue, value, pasteSelection, event);
-            return;
-        }
-        var selection = this.getSelection();
-        var caretPos = selection.end;
-        var maskLen = mask.length;
-        var valueLen = value.length;
-        var oldValueLen = oldValue.length;
-        var prefixLen = this.getPrefix().length;
-        var clearedValue;
-
-        if (valueLen > oldValueLen) {
-            var substrLen = valueLen - oldValueLen;
-            var startPos = selection.end - substrLen;
-            var enteredSubstr = value.substr(startPos, substrLen);
-
-            if (startPos < lastEditablePos && (substrLen !== 1 || enteredSubstr !== mask[startPos])) {
-                caretPos = this.getRightEditablePos(startPos);
-            } else {
-                caretPos = startPos;
-            }
-
-            value = value.substr(0, startPos) + value.substr(startPos + substrLen);
-
-            clearedValue = this.clearRange(value, startPos, maskLen - startPos);
-            clearedValue = this.insertRawSubstr(clearedValue, enteredSubstr, caretPos);
-
-            value = this.insertRawSubstr(oldValue, enteredSubstr, caretPos);
-
-            if (substrLen !== 1 || caretPos >= prefixLen && caretPos < lastEditablePos) {
-                caretPos = this.getFilledLength(clearedValue);
-            } else if (caretPos < lastEditablePos) {
-                caretPos++;
-            }
-        } else if (valueLen < oldValueLen) {
-            var removedLen = maskLen - valueLen;
-            clearedValue = this.clearRange(oldValue, selection.end, removedLen);
-            var substr = value.substr(0, selection.end);
-            var clearOnly = substr === oldValue.substr(0, selection.end);
-
-            if (maskChar) {
-                value = this.insertRawSubstr(clearedValue, substr, 0);
-            }
-
-            clearedValue = this.clearRange(clearedValue, selection.end, maskLen - selection.end);
-            clearedValue = this.insertRawSubstr(clearedValue, substr, 0);
-
-            if (!clearOnly) {
-                caretPos = this.getFilledLength(clearedValue);
-            } else if (caretPos < prefixLen) {
-                caretPos = prefixLen;
-            }
-        }
-        value = this.formatValue(value);
-
-        // prevent android autocomplete insertion on backspace
-        // prevent hanging after first entered character on Windows 10 Mobile
-        if (!this.canUseAccessors || !this.isAndroidBrowser && !this.isWindowsPhoneBrowser) {
-            this.setInputValue(value);
-        }
-
-        if (this.canUseAccessors && (this.isAndroidFirefox && value && !this.getInputValue() || this.isAndroidBrowser || this.isWindowsPhoneBrowser)) {
-            this.value = value;
-            this.enableValueAccessors();
-            if (this.isAndroidFirefox) {
-                this.preventEmptyChange = true;
-            }
-            setTimeout(function () {
-                _this6.preventEmptyChange = false;
-                _this6.disableValueAccessors();
-            }, 0);
-        }
-
-        this.setState({
-            value: this.hasValue ? this.state.value : value
-        });
-
-        if (typeof this.props.onChange === "function") {
-            this.props.onChange(event);
-        }
-
-        this.setCaretPos(caretPos);
-    },
-    onFocus: function (event) {
-        if (!this.state.value) {
-            var prefix = this.getPrefix();
-            var value = this.formatValue(prefix);
-            var inputValue = this.formatValue(value);
-
-            // do not use this.getInputValue and this.setInputValue as this.refs.input
-            // can be undefined at this moment if autoFocus attribute is set
-            var isInputValueChanged = inputValue !== event.target.value;
-
-            if (isInputValueChanged) {
-                event.target.value = inputValue;
-            }
-
-            this.setState({
-                value: this.hasValue ? this.state.value : inputValue
-            }, this.setCaretToEnd);
-
-            if (isInputValueChanged && typeof this.props.onChange === "function") {
-                this.props.onChange(event);
-            }
-        } else if (this.getFilledLength() < this.mask.length) {
-            this.setCaretToEnd();
-        }
-
-        if (typeof this.props.onFocus === "function") {
-            this.props.onFocus(event);
-        }
-    },
-    onBlur: function (event) {
-        if (!this.props.alwaysShowMask && this.isEmpty(this.state.value)) {
-            var inputValue = "";
-            var isInputValueChanged = inputValue !== this.getInputValue();
-            if (isInputValueChanged) {
-                this.setInputValue(inputValue);
-            }
-            this.setState({
-                value: this.hasValue ? this.state.value : ""
-            });
-            if (isInputValueChanged && typeof this.props.onChange === "function") {
-                this.props.onChange(event);
-            }
-        }
-
-        if (typeof this.props.onBlur === "function") {
-            this.props.onBlur(event);
-        }
-    },
-    onPaste: function (event) {
-        if (this.isAndroidBrowser) {
-            this.pasteSelection = this.getSelection();
-            this.setInputValue("");
-            return;
-        }
-        var text;
-        if (window.clipboardData && window.clipboardData.getData) {
-            // IE
-            text = window.clipboardData.getData("Text");
-        } else if (event.clipboardData && event.clipboardData.getData) {
-            text = event.clipboardData.getData("text/plain");
-        }
-        if (text) {
-            var value = this.state.value;
-            var selection = this.getSelection();
-            this.pasteText(value, text, selection, event);
-        }
-        event.preventDefault();
-    },
-    pasteText: function (value, text, selection, event) {
-        var caretPos = selection.start;
-        if (selection.length) {
-            value = this.clearRange(value, caretPos, selection.length);
-        }
-        var textLen = this.getRawSubstrLength(value, text, caretPos);
-        value = this.insertRawSubstr(value, text, caretPos);
-        caretPos += textLen;
-        caretPos = this.getRightEditablePos(caretPos) || caretPos;
-        if (value !== this.getInputValue()) {
-            if (event) {
-                this.setInputValue(value);
-            }
-            this.setState({
-                value: this.hasValue ? this.state.value : value
-            });
-            if (event && typeof this.props.onChange === "function") {
-                this.props.onChange(event);
-            }
-        }
-        this.setCaretPos(caretPos);
-    },
-    componentDidMount: function () {
-        this.isAndroidBrowser = this.isAndroidBrowser();
-        this.isWindowsPhoneBrowser = this.isWindowsPhoneBrowser();
-        this.isAndroidFirefox = this.isAndroidFirefox();
-
-        if (Object.getOwnPropertyDescriptor && Object.getPrototypeOf && Object.defineProperty) {
-            var input = this.getInputDOMNode();
-            var valueDescriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(input), 'value');
-            this.canUseAccessors = !!(valueDescriptor && valueDescriptor.get && valueDescriptor.set);
-        }
-
-        if (this.mask && this.props.value == null) {
-            this.updateUncontrolledInput();
-        }
-    },
-    render: function () {
-        var _this7 = this;
-
-        var _props = this.props;
-        var mask = _props.mask;
-        var alwaysShowMask = _props.alwaysShowMask;
-        var maskChar = _props.maskChar;
-        var formatChars = _props.formatChars;
-
-        var props = _objectWithoutProperties(_props, ["mask", "alwaysShowMask", "maskChar", "formatChars"]);
-
-        if (this.mask) {
-            var handlersKeys = ["onFocus", "onBlur", "onChange", "onKeyDown", "onKeyPress", "onPaste"];
-            handlersKeys.forEach(function (key) {
-                props[key] = _this7[key];
-            });
-
-            if (props.value != null) {
-                props.value = this.state.value;
-            }
-        }
-        return React.createElement("input", _extends({ ref: "input" }, props));
+    for (i = 0; i < sourceKeys.length; i++) {
+      key = sourceKeys[i];
+      if (excluded.indexOf(key) >= 0) continue;
+      target[key] = source[key];
     }
-});
 
+    if (Object.getOwnPropertySymbols) {
+      var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
+
+      for (i = 0; i < sourceSymbolKeys.length; i++) {
+        key = sourceSymbolKeys[i];
+        if (excluded.indexOf(key) >= 0) continue;
+        if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
+        target[key] = source[key];
+      }
+    }
+
+    return target;
+  }
+
+  function _assertThisInitialized(self) {
+    if (self === void 0) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+
+    return self;
+  }
+
+  /**
+   * Copyright (c) 2013-present, Facebook, Inc.
+   *
+   * This source code is licensed under the MIT license found in the
+   * LICENSE file in the root directory of this source tree.
+   */
+
+  var invariant = function (condition, format, a, b, c, d, e, f) {
+    {
+      if (format === undefined) {
+        throw new Error('invariant requires an error message argument');
+      }
+    }
+
+    if (!condition) {
+      var error;
+
+      if (format === undefined) {
+        error = new Error('Minified exception occurred; use the non-minified dev environment ' + 'for the full error message and additional helpful warnings.');
+      } else {
+        var args = [a, b, c, d, e, f];
+        var argIndex = 0;
+        error = new Error(format.replace(/%s/g, function () {
+          return args[argIndex++];
+        }));
+        error.name = 'Invariant Violation';
+      }
+
+      error.framesToPop = 1; // we don't care about invariant's own frame
+
+      throw error;
+    }
+  };
+
+  var invariant_1 = invariant;
+
+  /**
+   * Copyright 2014-2015, Facebook, Inc.
+   * All rights reserved.
+   *
+   * This source code is licensed under the BSD-style license found in the
+   * LICENSE file in the root directory of this source tree. An additional grant
+   * of patent rights can be found in the PATENTS file in the same directory.
+   */
+
+  var warning = function () {};
+
+  {
+    warning = function (condition, format, args) {
+      var len = arguments.length;
+      args = new Array(len > 2 ? len - 2 : 0);
+
+      for (var key = 2; key < len; key++) {
+        args[key - 2] = arguments[key];
+      }
+
+      if (format === undefined) {
+        throw new Error('`warning(condition, format, ...args)` requires a warning ' + 'message argument');
+      }
+
+      if (format.length < 10 || /^[s\W]*$/.test(format)) {
+        throw new Error('The warning format should be able to uniquely identify this ' + 'warning. Please, use a more descriptive format than: ' + format);
+      }
+
+      if (!condition) {
+        var argIndex = 0;
+        var message = 'Warning: ' + format.replace(/%s/g, function () {
+          return args[argIndex++];
+        });
+
+        if (typeof console !== 'undefined') {
+          console.error(message);
+        }
+
+        try {
+          // This error was thrown as a convenience so that you can use this stack
+          // to find the callsite that caused this warning to fire.
+          throw new Error(message);
+        } catch (x) {}
+      }
+    };
+  }
+
+  var warning_1 = warning;
+
+  function setInputSelection(input, start, end) {
+    if ('selectionStart' in input && 'selectionEnd' in input) {
+      input.selectionStart = start;
+      input.selectionEnd = end;
+    } else {
+      var range = input.createTextRange();
+      range.collapse(true);
+      range.moveStart('character', start);
+      range.moveEnd('character', end - start);
+      range.select();
+    }
+  }
+  function getInputSelection(input) {
+    var start = 0;
+    var end = 0;
+
+    if ('selectionStart' in input && 'selectionEnd' in input) {
+      start = input.selectionStart;
+      end = input.selectionEnd;
+    } else {
+      var range = document.selection.createRange();
+
+      if (range.parentElement() === input) {
+        start = -range.moveStart('character', -input.value.length);
+        end = -range.moveEnd('character', -input.value.length);
+      }
+    }
+
+    return {
+      start: start,
+      end: end,
+      length: end - start
+    };
+  }
+
+  var defaultFormatChars = {
+    '9': '[0-9]',
+    'a': '[A-Za-z]',
+    '*': '[A-Za-z0-9]'
+  };
+  var defaultMaskChar = '_';
+
+  function parseMask (mask, maskChar, formatChars) {
+    var parsedMaskString = '';
+    var prefix = '';
+    var lastEditablePosition = null;
+    var permanents = [];
+
+    if (maskChar === undefined) {
+      maskChar = defaultMaskChar;
+    }
+
+    if (formatChars == null) {
+      formatChars = defaultFormatChars;
+    }
+
+    if (!mask || typeof mask !== 'string') {
+      return {
+        maskChar: maskChar,
+        formatChars: formatChars,
+        mask: null,
+        prefix: null,
+        lastEditablePosition: null,
+        permanents: []
+      };
+    }
+
+    var isPermanent = false;
+    mask.split('').forEach(function (character) {
+      if (!isPermanent && character === '\\') {
+        isPermanent = true;
+      } else {
+        if (isPermanent || !formatChars[character]) {
+          permanents.push(parsedMaskString.length);
+
+          if (parsedMaskString.length === permanents.length - 1) {
+            prefix += character;
+          }
+        } else {
+          lastEditablePosition = parsedMaskString.length + 1;
+        }
+
+        parsedMaskString += character;
+        isPermanent = false;
+      }
+    });
+    return {
+      maskChar: maskChar,
+      formatChars: formatChars,
+      prefix: prefix,
+      mask: parsedMaskString,
+      lastEditablePosition: lastEditablePosition,
+      permanents: permanents
+    };
+  }
+
+  /* eslint no-use-before-define: ["error", { functions: false }] */
+  function isPermanentCharacter(maskOptions, pos) {
+    return maskOptions.permanents.indexOf(pos) !== -1;
+  }
+  function isAllowedCharacter(maskOptions, pos, character) {
+    var mask = maskOptions.mask,
+        formatChars = maskOptions.formatChars;
+
+    if (!character) {
+      return false;
+    }
+
+    if (isPermanentCharacter(maskOptions, pos)) {
+      return mask[pos] === character;
+    }
+
+    var ruleChar = mask[pos];
+    var charRule = formatChars[ruleChar];
+    return new RegExp(charRule).test(character);
+  }
+  function isEmpty(maskOptions, value) {
+    return value.split('').every(function (character, i) {
+      return isPermanentCharacter(maskOptions, i) || !isAllowedCharacter(maskOptions, i, character);
+    });
+  }
+  function getFilledLength(maskOptions, value) {
+    var maskChar = maskOptions.maskChar,
+        prefix = maskOptions.prefix;
+
+    if (!maskChar) {
+      while (value.length > prefix.length && isPermanentCharacter(maskOptions, value.length - 1)) {
+        value = value.slice(0, value.length - 1);
+      }
+
+      return value.length;
+    }
+
+    var filledLength = prefix.length;
+
+    for (var i = value.length; i >= prefix.length; i--) {
+      var character = value[i];
+      var isEnteredCharacter = !isPermanentCharacter(maskOptions, i) && isAllowedCharacter(maskOptions, i, character);
+
+      if (isEnteredCharacter) {
+        filledLength = i + 1;
+        break;
+      }
+    }
+
+    return filledLength;
+  }
+  function isFilled(maskOptions, value) {
+    return getFilledLength(maskOptions, value) === maskOptions.mask.length;
+  }
+  function formatValue(maskOptions, value) {
+    var maskChar = maskOptions.maskChar,
+        mask = maskOptions.mask,
+        prefix = maskOptions.prefix;
+
+    if (!maskChar) {
+      value = insertString(maskOptions, '', value, 0);
+
+      if (value.length < prefix.length) {
+        value = prefix;
+      }
+
+      while (value.length < mask.length && isPermanentCharacter(maskOptions, value.length)) {
+        value += mask[value.length];
+      }
+
+      return value;
+    }
+
+    if (value) {
+      var emptyValue = formatValue(maskOptions, '');
+      return insertString(maskOptions, emptyValue, value, 0);
+    }
+
+    for (var i = 0; i < mask.length; i++) {
+      if (isPermanentCharacter(maskOptions, i)) {
+        value += mask[i];
+      } else {
+        value += maskChar;
+      }
+    }
+
+    return value;
+  }
+  function clearRange(maskOptions, value, start, len) {
+    var end = start + len;
+    var maskChar = maskOptions.maskChar,
+        mask = maskOptions.mask,
+        prefix = maskOptions.prefix;
+    var arrayValue = value.split('');
+
+    if (!maskChar) {
+      // remove any permanent chars after clear range, they will be added back by formatValue
+      for (var i = end; i < arrayValue.length; i++) {
+        if (isPermanentCharacter(maskOptions, i)) {
+          arrayValue[i] = '';
+        }
+      }
+
+      start = Math.max(prefix.length, start);
+      arrayValue.splice(start, end - start);
+      value = arrayValue.join('');
+      return formatValue(maskOptions, value);
+    }
+
+    return arrayValue.map(function (character, i) {
+      if (i < start || i >= end) {
+        return character;
+      }
+
+      if (isPermanentCharacter(maskOptions, i)) {
+        return mask[i];
+      }
+
+      return maskChar;
+    }).join('');
+  }
+  function insertString(maskOptions, value, insertStr, insertPosition) {
+    var mask = maskOptions.mask,
+        maskChar = maskOptions.maskChar,
+        prefix = maskOptions.prefix;
+    var arrayInsertStr = insertStr.split('');
+    var isInputFilled = isFilled(maskOptions, value);
+
+    var isUsablePosition = function isUsablePosition(pos, character) {
+      return !isPermanentCharacter(maskOptions, pos) || character === mask[pos];
+    };
+
+    var isUsableCharacter = function isUsableCharacter(character, pos) {
+      return !maskChar || !isPermanentCharacter(maskOptions, pos) || character !== maskChar;
+    };
+
+    if (!maskChar && insertPosition > value.length) {
+      value += mask.slice(value.length, insertPosition);
+    }
+
+    arrayInsertStr.every(function (insertCharacter) {
+      while (!isUsablePosition(insertPosition, insertCharacter)) {
+        if (insertPosition >= value.length) {
+          value += mask[insertPosition];
+        }
+
+        if (!isUsableCharacter(insertCharacter, insertPosition)) {
+          return true;
+        }
+
+        insertPosition++; // stop iteration if maximum value length reached
+
+        if (insertPosition >= mask.length) {
+          return false;
+        }
+      }
+
+      var isAllowed = isAllowedCharacter(maskOptions, insertPosition, insertCharacter) || insertCharacter === maskChar;
+
+      if (!isAllowed) {
+        return true;
+      }
+
+      if (insertPosition < value.length) {
+        if (maskChar || isInputFilled || insertPosition < prefix.length) {
+          value = value.slice(0, insertPosition) + insertCharacter + value.slice(insertPosition + 1);
+        } else {
+          value = value.slice(0, insertPosition) + insertCharacter + value.slice(insertPosition);
+          value = formatValue(maskOptions, value);
+        }
+      } else if (!maskChar) {
+        value += insertCharacter;
+      }
+
+      insertPosition++; // stop iteration if maximum value length reached
+
+      return insertPosition < mask.length;
+    });
+    return value;
+  }
+  function getInsertStringLength(maskOptions, value, insertStr, insertPosition) {
+    var mask = maskOptions.mask,
+        maskChar = maskOptions.maskChar;
+    var arrayInsertStr = insertStr.split('');
+    var initialInsertPosition = insertPosition;
+
+    var isUsablePosition = function isUsablePosition(pos, character) {
+      return !isPermanentCharacter(maskOptions, pos) || character === mask[pos];
+    };
+
+    arrayInsertStr.every(function (insertCharacter) {
+      while (!isUsablePosition(insertPosition, insertCharacter)) {
+        insertPosition++; // stop iteration if maximum value length reached
+
+        if (insertPosition >= mask.length) {
+          return false;
+        }
+      }
+
+      var isAllowed = isAllowedCharacter(maskOptions, insertPosition, insertCharacter) || insertCharacter === maskChar;
+
+      if (isAllowed) {
+        insertPosition++;
+      } // stop iteration if maximum value length reached
+
+
+      return insertPosition < mask.length;
+    });
+    return insertPosition - initialInsertPosition;
+  }
+  function getLeftEditablePosition(maskOptions, pos) {
+    for (var i = pos; i >= 0; --i) {
+      if (!isPermanentCharacter(maskOptions, i)) {
+        return i;
+      }
+    }
+
+    return null;
+  }
+  function getRightEditablePosition(maskOptions, pos) {
+    var mask = maskOptions.mask;
+
+    for (var i = pos; i < mask.length; ++i) {
+      if (!isPermanentCharacter(maskOptions, i)) {
+        return i;
+      }
+    }
+
+    return null;
+  }
+  function getStringValue(value) {
+    return !value && value !== 0 ? '' : value + '';
+  }
+
+  function processChange(maskOptions, value, selection, previousValue, previousSelection) {
+    var mask = maskOptions.mask,
+        prefix = maskOptions.prefix,
+        lastEditablePosition = maskOptions.lastEditablePosition;
+    var newValue = value;
+    var enteredString = '';
+    var formattedEnteredStringLength = 0;
+    var removedLength = 0;
+    var cursorPosition = Math.min(previousSelection.start, selection.start);
+
+    if (selection.end > previousSelection.start) {
+      enteredString = newValue.slice(previousSelection.start, selection.end);
+      formattedEnteredStringLength = getInsertStringLength(maskOptions, previousValue, enteredString, cursorPosition);
+
+      if (!formattedEnteredStringLength) {
+        removedLength = 0;
+      } else {
+        removedLength = previousSelection.length;
+      }
+    } else if (newValue.length < previousValue.length) {
+      removedLength = previousValue.length - newValue.length;
+    }
+
+    newValue = previousValue;
+
+    if (removedLength) {
+      if (removedLength === 1 && !previousSelection.length) {
+        var deleteFromRight = previousSelection.start === selection.start;
+        cursorPosition = deleteFromRight ? getRightEditablePosition(maskOptions, selection.start) : getLeftEditablePosition(maskOptions, selection.start);
+      }
+
+      newValue = clearRange(maskOptions, newValue, cursorPosition, removedLength);
+    }
+
+    newValue = insertString(maskOptions, newValue, enteredString, cursorPosition);
+    cursorPosition = cursorPosition + formattedEnteredStringLength;
+
+    if (cursorPosition >= mask.length) {
+      cursorPosition = mask.length;
+    } else if (cursorPosition < prefix.length && !formattedEnteredStringLength) {
+      cursorPosition = prefix.length;
+    } else if (cursorPosition >= prefix.length && cursorPosition < lastEditablePosition && formattedEnteredStringLength) {
+      cursorPosition = getRightEditablePosition(maskOptions, cursorPosition);
+    }
+
+    newValue = formatValue(maskOptions, newValue);
+
+    if (!enteredString) {
+      enteredString = null;
+    }
+
+    return {
+      value: newValue,
+      enteredString: enteredString,
+      selection: {
+        start: cursorPosition,
+        end: cursorPosition
+      }
+    };
+  }
+
+  function isWindowsPhoneBrowser() {
+    var windows = new RegExp('windows', 'i');
+    var phone = new RegExp('phone', 'i');
+    var ua = navigator.userAgent;
+    return windows.test(ua) && phone.test(ua);
+  }
+
+  function isFunction(value) {
+    return typeof value === 'function';
+  }
+
+  function getRequestAnimationFrame() {
+    return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame;
+  }
+
+  function getCancelAnimationFrame() {
+    return window.cancelAnimationFrame || window.webkitCancelRequestAnimationFrame || window.webkitCancelAnimationFrame || window.mozCancelAnimationFrame;
+  }
+
+  function defer(fn) {
+    var hasCancelAnimationFrame = !!getCancelAnimationFrame();
+    var deferFn;
+
+    if (hasCancelAnimationFrame) {
+      deferFn = getRequestAnimationFrame();
+    } else {
+      deferFn = function deferFn() {
+        return setTimeout(fn, 1000 / 60);
+      };
+    }
+
+    return deferFn(fn);
+  }
+  function cancelDefer(deferId) {
+    var cancelFn = getCancelAnimationFrame() || clearTimeout;
+    cancelFn(deferId);
+  }
+
+  var InputElement =
+  /*#__PURE__*/
+  function (_React$Component) {
+    function InputElement(props) {
+      var _this;
+
+      _this = _React$Component.call(this, props) || this;
+      _this.focused = false;
+      _this.mounted = false;
+      _this.previousSelection = null;
+      _this.selectionDeferId = null;
+      _this.saveSelectionLoopDeferId = null;
+
+      _this.saveSelectionLoop = function () {
+        _this.previousSelection = _this.getSelection();
+        _this.saveSelectionLoopDeferId = defer(_this.saveSelectionLoop);
+      };
+
+      _this.runSaveSelectionLoop = function () {
+        if (_this.saveSelectionLoopDeferId === null) {
+          _this.saveSelectionLoop();
+        }
+      };
+
+      _this.stopSaveSelectionLoop = function () {
+        if (_this.saveSelectionLoopDeferId !== null) {
+          cancelDefer(_this.saveSelectionLoopDeferId);
+          _this.saveSelectionLoopDeferId = null;
+          _this.previousSelection = null;
+        }
+      };
+
+      _this.getInputDOMNode = function () {
+        if (!_this.mounted) {
+          return null;
+        }
+
+        if (_this.input) {
+          return _this.input;
+        }
+
+        var input = reactDom.findDOMNode(_assertThisInitialized(_assertThisInitialized(_this)));
+
+        if (input.nodeName !== 'INPUT') {
+          input = input.querySelector('input');
+        }
+
+        if (!input) {
+          throw new Error('react-input-mask: inputComponent doesn\'t contain input node');
+        }
+
+        return input;
+      };
+
+      _this.getInputValue = function () {
+        var input = _this.getInputDOMNode();
+
+        if (!input) {
+          return null;
+        }
+
+        return input.value;
+      };
+
+      _this.setInputValue = function (value) {
+        var input = _this.getInputDOMNode();
+
+        if (!input) {
+          return;
+        }
+
+        _this.value = value;
+        input.value = value;
+      };
+
+      _this.setCursorToEnd = function () {
+        var filledLength = getFilledLength(_this.maskOptions, _this.value);
+        var pos = getRightEditablePosition(_this.maskOptions, filledLength);
+
+        if (pos !== null) {
+          _this.setCursorPosition(pos);
+        }
+      };
+
+      _this.setSelection = function (start, end, options) {
+        if (options === void 0) {
+          options = {};
+        }
+
+        var input = _this.getInputDOMNode();
+
+        if (!input) {
+          return;
+        }
+
+        var _options = options,
+            deferred = _options.deferred;
+
+        if (!deferred) {
+          setInputSelection(input, start, end);
+        }
+
+        if (_this.selectionDeferId !== null) {
+          cancelDefer(_this.selectionDeferId);
+        } // deferred selection update is required for pre-Lollipop Android browser,
+        // but for consistent behavior we do it for all browsers
+
+
+        _this.selectionDeferId = defer(function () {
+          _this.selectionDeferId = null;
+          setInputSelection(input, start, end);
+        });
+        _this.previousSelection = {
+          start: start,
+          end: end,
+          length: Math.abs(end - start)
+        };
+      };
+
+      _this.getSelection = function () {
+        var input = _this.getInputDOMNode();
+
+        return getInputSelection(input);
+      };
+
+      _this.getCursorPosition = function () {
+        return _this.getSelection().start;
+      };
+
+      _this.setCursorPosition = function (pos) {
+        _this.setSelection(pos, pos);
+      };
+
+      _this.isFocused = function () {
+        return _this.focused;
+      };
+
+      _this.getBeforeMaskedValueChangeConfig = function () {
+        var _this$maskOptions = _this.maskOptions,
+            mask = _this$maskOptions.mask,
+            maskChar = _this$maskOptions.maskChar,
+            permanents = _this$maskOptions.permanents,
+            formatChars = _this$maskOptions.formatChars;
+        var alwaysShowMask = _this.props.alwaysShowMask;
+        return {
+          mask: mask,
+          maskChar: maskChar,
+          permanents: permanents,
+          alwaysShowMask: !!alwaysShowMask,
+          formatChars: formatChars
+        };
+      };
+
+      _this.isInputAutofilled = function (value, selection, previousValue, previousSelection) {
+        var input = _this.getInputDOMNode(); // only check for positive match because it will be false negative
+        // in case of autofill simulation in tests
+        //
+        // input.matches throws an exception if selector isn't supported
+
+
+        try {
+          if (input.matches(':-webkit-autofill')) {
+            return true;
+          }
+        } catch (e) {} // if input isn't focused then change event must have been triggered
+        // either by autofill or event simulation in tests
+
+
+        if (!_this.focused) {
+          return true;
+        } // if cursor has moved to the end while previousSelection forbids it
+        // then it must be autofill
+
+
+        return previousSelection.end < previousValue.length && selection.end === value.length;
+      };
+
+      _this.onChange = function (event) {
+        var _assertThisInitialize = _assertThisInitialized(_assertThisInitialized(_this)),
+            beforePasteState = _assertThisInitialize.beforePasteState;
+
+        var _assertThisInitialize2 = _assertThisInitialized(_assertThisInitialized(_this)),
+            previousSelection = _assertThisInitialize2.previousSelection;
+
+        var beforeMaskedValueChange = _this.props.beforeMaskedValueChange;
+
+        var value = _this.getInputValue();
+
+        var previousValue = _this.value;
+
+        var selection = _this.getSelection(); // autofill replaces entire value, ignore old one
+        // https://github.com/sanniassin/react-input-mask/issues/113
+
+
+        if (_this.isInputAutofilled(value, selection, previousValue, previousSelection)) {
+          previousValue = formatValue(_this.maskOptions, '');
+          previousSelection = {
+            start: 0,
+            end: 0,
+            length: 0
+          };
+        } // set value and selection as if we haven't
+        // cleared input in onPaste handler
+
+
+        if (beforePasteState) {
+          previousSelection = beforePasteState.selection;
+          previousValue = beforePasteState.value;
+          selection = {
+            start: previousSelection.start + value.length,
+            end: previousSelection.start + value.length,
+            length: 0
+          };
+          value = previousValue.slice(0, previousSelection.start) + value + previousValue.slice(previousSelection.end);
+          _this.beforePasteState = null;
+        }
+
+        var changedState = processChange(_this.maskOptions, value, selection, previousValue, previousSelection);
+        var enteredString = changedState.enteredString;
+        var newSelection = changedState.selection;
+        var newValue = changedState.value;
+
+        if (isFunction(beforeMaskedValueChange)) {
+          var modifiedValue = beforeMaskedValueChange({
+            value: newValue,
+            selection: newSelection
+          }, {
+            value: previousValue,
+            selection: previousSelection
+          }, enteredString, _this.getBeforeMaskedValueChangeConfig());
+          newValue = modifiedValue.value;
+          newSelection = modifiedValue.selection;
+        }
+
+        _this.setInputValue(newValue);
+
+        if (isFunction(_this.props.onChange)) {
+          _this.props.onChange(event);
+        }
+
+        if (_this.isWindowsPhoneBrowser) {
+          _this.setSelection(newSelection.start, newSelection.end, {
+            deferred: true
+          });
+        } else {
+          _this.setSelection(newSelection.start, newSelection.end);
+        }
+      };
+
+      _this.onFocus = function (event) {
+        var beforeMaskedValueChange = _this.props.beforeMaskedValueChange;
+        var _this$maskOptions2 = _this.maskOptions,
+            mask = _this$maskOptions2.mask,
+            prefix = _this$maskOptions2.prefix;
+        _this.focused = true; // if autoFocus is set, onFocus triggers before componentDidMount
+
+        _this.input = event.target;
+        _this.mounted = true;
+
+        if (mask) {
+          if (!_this.value) {
+            var emptyValue = formatValue(_this.maskOptions, prefix);
+            var newValue = formatValue(_this.maskOptions, emptyValue);
+            var filledLength = getFilledLength(_this.maskOptions, newValue);
+            var cursorPosition = getRightEditablePosition(_this.maskOptions, filledLength);
+            var newSelection = {
+              start: cursorPosition,
+              end: cursorPosition
+            };
+
+            if (isFunction(beforeMaskedValueChange)) {
+              var modifiedValue = beforeMaskedValueChange({
+                value: newValue,
+                selection: newSelection
+              }, {
+                value: _this.value,
+                selection: null
+              }, null, _this.getBeforeMaskedValueChangeConfig());
+              newValue = modifiedValue.value;
+              newSelection = modifiedValue.selection;
+            } // do not use this.getInputValue and this.setInputValue as this.input
+            // will be undefined if it's an initial mount of input with autoFocus attribute
+
+
+            var isInputValueChanged = newValue !== event.target.value;
+
+            if (isInputValueChanged) {
+              event.target.value = newValue;
+            }
+
+            _this.value = newValue;
+
+            if (isInputValueChanged && isFunction(_this.props.onChange)) {
+              _this.props.onChange(event);
+            }
+
+            _this.setSelection(newSelection.start, newSelection.end);
+          } else if (getFilledLength(_this.maskOptions, _this.value) < _this.maskOptions.mask.length) {
+            _this.setCursorToEnd();
+          }
+
+          _this.runSaveSelectionLoop();
+        }
+
+        if (isFunction(_this.props.onFocus)) {
+          _this.props.onFocus(event);
+        }
+      };
+
+      _this.onBlur = function (event) {
+        var beforeMaskedValueChange = _this.props.beforeMaskedValueChange;
+        var mask = _this.maskOptions.mask;
+
+        _this.stopSaveSelectionLoop();
+
+        _this.focused = false;
+
+        if (mask && !_this.props.alwaysShowMask && isEmpty(_this.maskOptions, _this.value)) {
+          var newValue = '';
+
+          if (isFunction(beforeMaskedValueChange)) {
+            var modifiedValue = beforeMaskedValueChange({
+              value: newValue,
+              selection: null
+            }, {
+              value: _this.value,
+              selection: _this.previousSelection
+            }, null, _this.getBeforeMaskedValueChangeConfig());
+            newValue = modifiedValue.value;
+          }
+
+          var isInputValueChanged = newValue !== _this.getInputValue();
+
+          if (isInputValueChanged) {
+            _this.setInputValue(newValue);
+          }
+
+          if (isInputValueChanged && isFunction(_this.props.onChange)) {
+            _this.props.onChange(event);
+          }
+        }
+
+        if (isFunction(_this.props.onBlur)) {
+          _this.props.onBlur(event);
+        }
+      };
+
+      _this.onMouseDown = function (event) {
+        // tiny unintentional mouse movements can break cursor
+        // position on focus, so we have to restore it in that case
+        //
+        // https://github.com/sanniassin/react-input-mask/issues/108
+        if (!_this.focused && document.addEventListener) {
+          _this.mouseDownX = event.clientX;
+          _this.mouseDownY = event.clientY;
+          _this.mouseDownTime = new Date().getTime();
+
+          var mouseUpHandler = function mouseUpHandler(mouseUpEvent) {
+            document.removeEventListener('mouseup', mouseUpHandler);
+
+            if (!_this.focused) {
+              return;
+            }
+
+            var deltaX = Math.abs(mouseUpEvent.clientX - _this.mouseDownX);
+            var deltaY = Math.abs(mouseUpEvent.clientY - _this.mouseDownY);
+            var axisDelta = Math.max(deltaX, deltaY);
+
+            var timeDelta = new Date().getTime() - _this.mouseDownTime;
+
+            if (axisDelta <= 10 && timeDelta <= 200 || axisDelta <= 5 && timeDelta <= 300) {
+              _this.setCursorToEnd();
+            }
+          };
+
+          document.addEventListener('mouseup', mouseUpHandler);
+        }
+
+        if (isFunction(_this.props.onMouseDown)) {
+          _this.props.onMouseDown(event);
+        }
+      };
+
+      _this.onPaste = function (event) {
+        if (isFunction(_this.props.onPaste)) {
+          _this.props.onPaste(event);
+        } // event.clipboardData might not work in Android browser
+        // cleaning input to get raw text inside onChange handler
+
+
+        if (!event.defaultPrevented) {
+          _this.beforePasteState = {
+            value: _this.getInputValue(),
+            selection: _this.getSelection()
+          };
+
+          _this.setInputValue('');
+        }
+      };
+
+      _this.handleRef = function (ref) {
+        _this.input = _this.getInputDOMNode();
+
+        if (_this.props.children == null && isFunction(_this.props.inputRef)) {
+          _this.props.inputRef(ref);
+        }
+      };
+
+      var _mask = props.mask,
+          _maskChar = props.maskChar,
+          _formatChars = props.formatChars,
+          _alwaysShowMask = props.alwaysShowMask,
+          _beforeMaskedValueChange = props.beforeMaskedValueChange;
+      var defaultValue = props.defaultValue,
+          _value = props.value;
+      _this.maskOptions = parseMask(_mask, _maskChar, _formatChars);
+
+      if (defaultValue == null) {
+        defaultValue = '';
+      }
+
+      if (_value == null) {
+        _value = defaultValue;
+      }
+
+      var _newValue = getStringValue(_value);
+
+      if (_this.maskOptions.mask && (_alwaysShowMask || _newValue)) {
+        _newValue = formatValue(_this.maskOptions, _newValue);
+
+        if (isFunction(_beforeMaskedValueChange)) {
+          var oldValue = props.value;
+
+          if (props.value == null) {
+            oldValue = defaultValue;
+          }
+
+          oldValue = getStringValue(oldValue);
+
+          var modifiedValue = _beforeMaskedValueChange({
+            value: _newValue,
+            selection: null
+          }, {
+            value: oldValue,
+            selection: null
+          }, null, _this.getBeforeMaskedValueChangeConfig());
+
+          _newValue = modifiedValue.value;
+        }
+      }
+
+      _this.value = _newValue;
+      return _this;
+    }
+
+    var _proto = InputElement.prototype;
+
+    _proto.componentDidMount = function componentDidMount() {
+      this.mounted = true;
+      this.isWindowsPhoneBrowser = isWindowsPhoneBrowser();
+
+      if (this.maskOptions.mask && this.getInputValue() !== this.value) {
+        this.setInputValue(this.value);
+      }
+    };
+
+    _proto.componentDidUpdate = function componentDidUpdate() {
+      var previousSelection = this.previousSelection;
+      var _this$props = this.props,
+          beforeMaskedValueChange = _this$props.beforeMaskedValueChange,
+          alwaysShowMask = _this$props.alwaysShowMask,
+          mask = _this$props.mask,
+          maskChar = _this$props.maskChar,
+          formatChars = _this$props.formatChars;
+      var previousMaskOptions = this.maskOptions;
+      var showEmpty = alwaysShowMask || this.isFocused();
+      var hasValue = this.props.value != null;
+      var newValue = hasValue ? getStringValue(this.props.value) : this.value;
+      var cursorPosition = previousSelection ? previousSelection.start : null;
+      this.maskOptions = parseMask(mask, maskChar, formatChars);
+
+      if (!this.maskOptions.mask) {
+        if (previousMaskOptions.mask) {
+          this.stopSaveSelectionLoop(); // render depends on this.maskOptions and this.value,
+          // call forceUpdate to keep it in sync
+
+          this.forceUpdate();
+        }
+
+        return;
+      } else if (!previousMaskOptions.mask && this.isFocused()) {
+        this.runSaveSelectionLoop();
+      }
+
+      var isMaskChanged = this.maskOptions.mask && this.maskOptions.mask !== previousMaskOptions.mask;
+
+      if (!previousMaskOptions.mask && !hasValue) {
+        newValue = this.getInputValue();
+      }
+
+      if (isMaskChanged || this.maskOptions.mask && (newValue || showEmpty)) {
+        newValue = formatValue(this.maskOptions, newValue);
+      }
+
+      if (isMaskChanged) {
+        var filledLength = getFilledLength(this.maskOptions, newValue);
+
+        if (cursorPosition === null || filledLength < cursorPosition) {
+          if (isFilled(this.maskOptions, newValue)) {
+            cursorPosition = filledLength;
+          } else {
+            cursorPosition = getRightEditablePosition(this.maskOptions, filledLength);
+          }
+        }
+      }
+
+      if (this.maskOptions.mask && isEmpty(this.maskOptions, newValue) && !showEmpty && (!hasValue || !this.props.value)) {
+        newValue = '';
+      }
+
+      var newSelection = {
+        start: cursorPosition,
+        end: cursorPosition
+      };
+
+      if (isFunction(beforeMaskedValueChange)) {
+        var modifiedValue = beforeMaskedValueChange({
+          value: newValue,
+          selection: newSelection
+        }, {
+          value: this.value,
+          selection: this.previousSelection
+        }, null, this.getBeforeMaskedValueChangeConfig());
+        newValue = modifiedValue.value;
+        newSelection = modifiedValue.selection;
+      }
+
+      this.value = newValue; // render depends on this.maskOptions and this.value,
+      // call forceUpdate to keep it in sync
+
+      if (this.getInputValue() !== this.value) {
+        this.setInputValue(this.value);
+        this.forceUpdate();
+      } else if (isMaskChanged) {
+        this.forceUpdate();
+      }
+
+      var isSelectionChanged = false;
+
+      if (newSelection.start != null && newSelection.end != null) {
+        isSelectionChanged = !previousSelection || previousSelection.start !== newSelection.start || previousSelection.end !== newSelection.end;
+      }
+
+      if (isSelectionChanged) {
+        this.setSelection(newSelection.start, newSelection.end);
+      }
+    };
+
+    _proto.componentWillUnmount = function componentWillUnmount() {
+      this.mounted = false;
+
+      if (this.selectionDeferId !== null) {
+        cancelDefer(this.selectionDeferId);
+      }
+
+      this.stopSaveSelectionLoop();
+    };
+
+    _proto.render = function render() {
+      var _this$props2 = this.props,
+          mask = _this$props2.mask,
+          alwaysShowMask = _this$props2.alwaysShowMask,
+          maskChar = _this$props2.maskChar,
+          formatChars = _this$props2.formatChars,
+          inputRef = _this$props2.inputRef,
+          beforeMaskedValueChange = _this$props2.beforeMaskedValueChange,
+          children = _this$props2.children,
+          restProps = _objectWithoutProperties(_this$props2, ["mask", "alwaysShowMask", "maskChar", "formatChars", "inputRef", "beforeMaskedValueChange", "children"]);
+
+      var inputElement;
+      warning_1( // parse mask to test against actual mask prop as this.maskOptions
+      // will be updated later in componentDidUpdate
+      !restProps.maxLength || !parseMask(mask, maskChar, formatChars).mask, 'react-input-mask: maxLength property shouldn\'t be passed to the masked input. It breaks masking and unnecessary because length is limited by the mask length.');
+
+      if (children) {
+        !isFunction(children) ? invariant_1(false, 'react-input-mask: children must be a function') : void 0;
+        var controlledProps = ['onChange', 'onPaste', 'onMouseDown', 'onFocus', 'onBlur', 'value', 'disabled', 'readOnly'];
+
+        var childrenProps = _extends({}, restProps);
+
+        controlledProps.forEach(function (propId) {
+          return delete childrenProps[propId];
+        });
+        inputElement = children(childrenProps);
+        var conflictProps = controlledProps.filter(function (propId) {
+          return inputElement.props[propId] != null && inputElement.props[propId] !== restProps[propId];
+        });
+        !!conflictProps.length ? invariant_1(false, "react-input-mask: the following props should be passed to the react-input-mask's component and should not be altered in children's function: " + conflictProps.join(', ')) : void 0;
+        warning_1(!inputRef, 'react-input-mask: inputRef is ignored when children is passed, attach ref to the children instead');
+      } else {
+        inputElement = React.createElement("input", _extends({
+          ref: this.handleRef
+        }, restProps));
+      }
+
+      var changedProps = {
+        onFocus: this.onFocus,
+        onBlur: this.onBlur
+      };
+
+      if (this.maskOptions.mask) {
+        if (!restProps.disabled && !restProps.readOnly) {
+          changedProps.onChange = this.onChange;
+          changedProps.onPaste = this.onPaste;
+          changedProps.onMouseDown = this.onMouseDown;
+        }
+
+        if (restProps.value != null) {
+          changedProps.value = this.value;
+        }
+      }
+
+      inputElement = React.cloneElement(inputElement, changedProps);
+      return inputElement;
+    };
+
+    _inheritsLoose(InputElement, _React$Component);
+
+    return InputElement;
+  }(React.Component);
+
+  return InputElement;
+
+})));

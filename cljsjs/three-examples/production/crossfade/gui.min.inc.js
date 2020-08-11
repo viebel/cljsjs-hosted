@@ -1,0 +1,3 @@
+var transitionParams={useTexture:!0,transition:.5,transitionSpeed:2,texture:5,loopTexture:!0,animateTransition:!0,textureThreshold:.3};
+function initGUI(){var a=new dat.GUI;a.add(transitionParams,"useTexture").onChange(function(a){transition.useTexture(a)});a.add(transitionParams,"loopTexture");a.add(transitionParams,"texture",{Perlin:0,Squares:1,Cells:2,Distort:3,Gradient:4,Radial:5}).onChange(function(a){transition.setTexture(a)}).listen();a.add(transitionParams,"textureThreshold",0,1,.01).onChange(function(a){transition.setTextureThreshold(a)});a.add(transitionParams,"animateTransition");a.add(transitionParams,"transition",0,1,
+.01).listen();a.add(transitionParams,"transitionSpeed",.5,5,.01)};
