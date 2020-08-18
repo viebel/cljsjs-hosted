@@ -4,7 +4,7 @@
 
 // Loaded JavaScripts:
 // https://unpkg.com/react@15.3.2/dist/react.js
-// https://rawgit.com/STRML/react-grid-layout/0.13.7/dist/react-grid-layout.min.js
+// https://cdn.jsdelivr.net/gh/STRML/react-grid-layout@0.13.7/dist/react-grid-layout.min.js
 
 // Reference ns as ReactGridLayout
 

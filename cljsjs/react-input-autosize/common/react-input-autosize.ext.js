@@ -2,7 +2,7 @@
 //
 // Loaded JS:
 // * https://cdnjs.cloudflare.com/ajax/libs/react/15.0.0/react.js
-// * https://rawgit.com/JedWatson/react-input-autosize/master/dist/react-input-autosize.min.js
+// * https://cdn.jsdelivr.net/gh/JedWatson/react-input-autosize@master/dist/react-input-autosize.min.js
 var AutosizeInput = {
     "displayName": {},
     "propTypes": {
