@@ -9,7 +9,7 @@
     "@unicef/material-ui-currency-textfield": "0.8.6"
   },
   "devDependencies": {
-    "webpack": "4.42.1",
+    "webpack": "5.94.0",
     "webpack-cli": "3.3.11"
   }
 }
